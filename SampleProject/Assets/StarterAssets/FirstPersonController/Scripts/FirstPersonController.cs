@@ -1,4 +1,6 @@
 ﻿using Cinemachine;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
 using UnityEngine.InputSystem;
@@ -133,8 +135,14 @@ namespace StarterAssets
 			//
 
             scaleY = GameObject.Find("PlayerCapsule").GetComponent<Transform>().localScale.y;
+
             currentBullets = bulletsPerMag;
-        }
+
+			if(weaponName == null)
+            {
+				weaponName = "Pistol";
+            }
+		}
 
 		private void Update()
 		{
@@ -142,20 +150,28 @@ namespace StarterAssets
 			GroundedCheck();
 			Move();
 
-			//추가된 sctipt
+			//추가 sctipt
 
 			UseCrouch();        //앉기 기능
 
-            if (_input.MainFire)		//발사 기능
+			
+			if (_input.MainFire)		//Mouse1
             {
                 if (currentBullets > 0)		
                     Fire();
             }
-            if (fireTimer < fireRate)
+			else if(fireTimer < fireRate)
+			{
+				fireTimer += Time.deltaTime;        //타이머 = 실제 시간
+			}
+			
+			if (_input.SubFire)		//Mouse2
             {
-                fireTimer += Time.deltaTime;		//타이머 = 실제 시간
+
             }
-        }
+
+			
+		}
 
 		private void LateUpdate()
 		{
@@ -288,8 +304,8 @@ namespace StarterAssets
 
 		private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
 		{
-			if (lfAngle < -360f) lfAngle += 360f;
-			if (lfAngle > 360f) lfAngle -= 360f;
+			if (lfAngle < -360f) lfAngle += 360f;			
+			if (lfAngle > 360f) lfAngle -= 360f;			
 			return Mathf.Clamp(lfAngle, lfMin, lfMax);
 		}
 
@@ -305,32 +321,67 @@ namespace StarterAssets
 			Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z), GroundedRadius);
 		}
 
+		//-----------------------------------------------------------------------------------------------------------------------//
 		//앉기 키를 사용시, Scale를 조정해 보여지는 시야와 플레이어 크기를 줄임
+		int i = 1;		//앉기 시스템
+		bool Ctoggle = false;		//1회용 토글
+
 		private void UseCrouch()
         {
-           
-            if (_input.crouch)
+			if (_input.crouch && Ctoggle == false)
 			{
-				this.transform.localScale = new Vector3(1.0f, (scaleY / 1.6f), 1.0f);
-                if (Grounded && !_input.jump)
-				{
-					transform.Translate(0, -0.2f, 0);
-                }
+						//앉기
+				i = 1;
+				StartCoroutine("CrouchOn");
+				Ctoggle = true;
 			}
-			else
+			else if(!_input.crouch && Ctoggle)
 			{
-				this.transform.localScale = new Vector3(1.0f, (scaleY), 1.0f);
+				
+				
+				StartCoroutine("CrouchOff");
+
+				Ctoggle = false;
 			}
         }
+		
+		IEnumerator CrouchOn()
+        {
+			this.transform.localScale = new Vector3(.8f, (scaleY), .8f);
+			i = 1;
+			while (i < 30)
+			{
+				this.transform.localScale += new Vector3(0f, -0.01f, 0f);
 
+				i++;
+				yield return new WaitForSecondsRealtime(.005f);
+			}
+			if (!_input.crouch)
+				StartCoroutine("CrouchOff");
+		}
 
-        //------------------------------------------------------------------------------------------------------------------------------------//
+		IEnumerator CrouchOff()
+		{
+			
+			this.transform.localScale = new Vector3(.8f, 0.71f, .8f);
+			i = 1;
+			while (i < 30)
+			{
+				this.transform.localScale += new Vector3(0f, 0.01f, 0f);
 
-        //무기 세부 설정
+				i++;
+				yield return new WaitForSecondsRealtime(.005f);
+			}
+			this.transform.localScale = new Vector3(0.8f, (scaleY), 0.8f);
+		}
 
+		//------------------------------------------------------------------------------------------------------------------------------------//
 
-        [Tooltip("무기의 이름")]
-        public string weaponName;
+		//무기 세부 설정
+
+		[Header("GUN")]
+		[Tooltip("무기의 이름")]
+        public static string weaponName;		//총이름을 가져와야한다. 그리고 클리어시, 무슨총인지도 알려야한다.
         [Tooltip("탄창당 탄 개수")]
         public int bulletsPerMag;
         [Tooltip("잔여 총알")]
@@ -347,7 +398,7 @@ namespace StarterAssets
         private float fireTimer;
 
 		// 방향 설정
-		[Tooltip("RayCast의 시작점")]
+		[Tooltip("RayCast의 시작점과 방향")]
         public Transform shootPoint;
 
         public void Fire()			//투사체는 최적화가 어려워서 Raycast로 진행
@@ -356,19 +407,56 @@ namespace StarterAssets
             {
                 return;
             }
-            Debug.Log("Shot Fired!");		//발사 알림(이 아래부터는 발사 시스템이다.)
-            RaycastHit hit;
-			if (Physics.Raycast(shootPoint.position, shootPoint.transform.forward, out hit, range))     //맞음 확인
-            {							
-				Debug.Log("Hit!");
-			}
-            currentBullets--;
-            fireTimer = 0.0f;
+			else if(currentBullets <= 0)
+            {
+
+            }
+			else if(fireTimer >= fireRate && currentBullets >= 0)	//발사
+            {
+				GunRecoil();
+				return;
+            }
+			
+				
         }
 		void GunRecoil()
 		{
+			//발사
+			Debug.Log("Shot Fired!");      
+			RaycastHit hitinfo;
+			if (Physics.Raycast(shootPoint.position, shootPoint.transform.forward, out hitinfo, range))     //맞음 확인
+			{
+				Debug.Log("Hit!");
+			}
+			currentBullets--;
+			fireTimer = 0.0f;
+			//반동
+			switch(weaponName)
+            {
+				case "Pistol":
 
+					break;
+
+				case "Rifle":
+
+					break;
+
+				case "Knife":
+
+					break;
+			}
 		}
 
+		public void Interaction()
+        {
+			if (_input.Interaction)
+			{
+
+			}
+			else if (_input.SubInter)
+			{
+
+			}
+		}
     }
 }

@@ -6,24 +6,24 @@ using UnityEngine.AI;
 public class EnemyTrack : MonoBehaviour
 {
 
-    NavMeshAgent navi;
+    NavMeshAgent navigate;
     GameObject target;
 
     void Start()
     {
         target = GameObject.Find("PlayerCapsule");
-        navi = GetComponent<NavMeshAgent>();
+        navigate = GetComponent<NavMeshAgent>();
     }
 
     void Update()
     {
-        if(navi.destination != target.transform.position)
+        if(navigate.destination != target.transform.position)
         {
-            navi.SetDestination(target.transform.position);
+            navigate.SetDestination(target.transform.position);
         }
         else
         {
-            navi.SetDestination(transform.position);
+            navigate.SetDestination(transform.position);
         }
     }
 }

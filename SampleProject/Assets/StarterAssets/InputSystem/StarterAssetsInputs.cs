@@ -12,6 +12,7 @@ namespace StarterAssets
 		public Vector2 look;
 		public bool jump;
 		public bool sprint;
+
 		//
 		public bool walk;
 		public bool crouch;
@@ -19,6 +20,7 @@ namespace StarterAssets
         public bool SubFire;
         public bool Reload;
         public bool Interaction;
+		public bool SubInter;
 
 
         [Header("Movement Settings")]
@@ -82,6 +84,12 @@ namespace StarterAssets
 		{
 			InteractionInput(value.isPressed);
 		}
+
+		public void SubnInter(InputValue value)
+		{
+			SubInterInput(value.isPressed);
+		}
+
 #endif
 
 
@@ -135,9 +143,14 @@ namespace StarterAssets
             Interaction = newInteractionState;
         }
 
+		public void SubInterInput(bool newSubInterState)
+		{
+			SubInter = newSubInterState;
+		}
+		
 
 
-        private void OnApplicationFocus(bool hasFocus)
+		private void OnApplicationFocus(bool hasFocus)
 		{
 			SetCursorState(cursorLocked);
 		}

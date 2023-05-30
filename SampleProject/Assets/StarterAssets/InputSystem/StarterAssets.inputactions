@@ -84,6 +84,14 @@
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": ""
+                },
+                {
+                    "name": "SubInteraction",
+                    "type": "PassThrough",
+                    "id": "c71a5464-6bff-44d6-8222-4aa4af4b367f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -326,6 +334,17 @@
                     "processors": "",
                     "groups": "KeyboardMouse",
                     "action": "SubFire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "12a84683-9cb4-4be7-9efb-8471b6497e24",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "SubInteraction",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
