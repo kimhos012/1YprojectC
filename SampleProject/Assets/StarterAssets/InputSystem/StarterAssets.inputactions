@@ -41,7 +41,7 @@
                     "name": "Walk",
                     "type": "PassThrough",
                     "id": "1579090b-9b6b-4007-86d5-5cd04b610384",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },
@@ -89,6 +89,38 @@
                     "name": "SubInteraction",
                     "type": "PassThrough",
                     "id": "c71a5464-6bff-44d6-8222-4aa4af4b367f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "1",
+                    "type": "PassThrough",
+                    "id": "7d547d0d-d347-4c74-9ad2-c10e10575f55",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "2",
+                    "type": "PassThrough",
+                    "id": "f12eced1-d4d2-4aff-b69d-15dfde26ff57",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "3",
+                    "type": "PassThrough",
+                    "id": "2cfd651b-9362-4461-989c-5a0cf2bef1f2",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "Granade",
+                    "type": "PassThrough",
+                    "id": "193f327d-52ed-4fba-9a93-98422bf481a8",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
@@ -345,6 +377,50 @@
                     "processors": "",
                     "groups": "KeyboardMouse",
                     "action": "SubInteraction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4e441d9e-0efa-4c69-8638-bd6c75659757",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fdfe6da1-eac3-4274-8dbc-cc7563bedb79",
+                    "path": "<Keyboard>/2",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "2",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3a953afb-fd21-448e-8f1b-e61dc62a8e6a",
+                    "path": "<Keyboard>/3",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "3",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "726448d7-7acf-4574-a4fd-3429bc8a0036",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "Granade",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -136,34 +136,45 @@ namespace StarterAssets
             {
 				weaponName = "Pistol";
             }
-		}
+
+			_input.walk = false;
+
+			Pistol = GameObject.Find("MainWeapon").transform.GetChild(1).gameObject;
+            Rifle = GameObject.Find("MainWeapon").transform.GetChild(0).gameObject;
+
+        }
 
 		private void Update()
 		{
-			JumpAndGravity();
+			//이곳으로 옮겨진 이유는 총기의 반동이 화면 90도를 넘어가버리는 문제를 막기 위해 위로 옮겼습니다.
+            _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+
+
+            JumpAndGravity();
 			GroundedCheck();
 			Move();
 
 			//custom--
+			//
+
 
 			UseCrouch();        //앉기 기능
 
-			if (_input.Reload)
+			SwapWeapon();		//무기변경
+
+
+
+            if (_input.Reload)		//재장전
 			{
 				if(!Isreload)
 				{
-					Isreload = true;
 					StartCoroutine(ReloadAmmo());
 					Debug.Log("pressed R");
 				}
-				else
-                {
-					return;
-                }
-			}
+				else { return; }
+            }
 
-
-			if (_input.MainFire)		//Mouse1
+			if (_input.MainFire && !Isreload)		//Mouse1
             {
                 Fire();		//발사장치
             }
@@ -176,8 +187,12 @@ namespace StarterAssets
             {
 
             }
-			
-		}
+
+			GunName = weaponName;		//Save text
+			Ammo = currentBullets;
+			AmmoTotal = bulletsTotal;
+
+        }
 
 		private void LateUpdate()
 		{
@@ -203,7 +218,7 @@ namespace StarterAssets
 				_rotationVelocity = _input.look.x * RotationSpeed * deltaTimeMultiplier;
 
 				// clamp our pitch rotation
-				_cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+				//_cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
 
 				// Update Cinemachine camera target pitch
 				CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, 0.0f);
@@ -216,7 +231,7 @@ namespace StarterAssets
 		private void Move()
 		{
 			// set target speed based on move speed, sprint speed and if sprint is pressed
-			float targetSpeed = _input.sprint ? SprintSpeed : _input.walk ? WalkSpeed : _input.crouch ? CrouchSpeed : _input.crouch ? SubFireSpeed : MoveSpeed;
+			float targetSpeed = _input.sprint ? SprintSpeed : _input.walk ? WalkSpeed : _input.crouch ? CrouchSpeed : _input.SubFire ? SubFireSpeed : MoveSpeed;
 
 			// a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
@@ -327,6 +342,40 @@ namespace StarterAssets
 			Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z), GroundedRadius);
 		}
 
+		//------------------------------------------무기변경------------------------------------------
+		GameObject Pistol;
+		GameObject Rifle;
+
+		void SwapWeapon()			//60%제작함
+		{
+			if(_input.MainSwap)				//1
+			{
+				weaponName = "Rifle";
+				bulletsPerMag = 30;
+				bulletsTotal = 90;
+				fireRate = 0.08f;
+				Pistol.SetActive(false);
+                Rifle.SetActive(true);
+            }
+			else if (_input.SubSwap)		//2
+            {
+                weaponName = "Pistol";
+                bulletsPerMag = 12;
+                bulletsTotal = 36;
+                fireRate = 0.2f;
+                Pistol.SetActive(true);
+                Rifle.SetActive(false);
+            }
+            else if (_input.KnifeSwap)		//3
+            {
+
+            }
+            else if (_input.GamjaSwap)		//G
+            {
+
+            }
+        }
+
 		//-----------------------------------------------------------------------------------------------------------------------//
 		//앉기 키를 사용시, Scale를 조정해 보여지는 시야와 플레이어 크기를 줄임
 		int i = 1;		//앉기 시스템
@@ -387,13 +436,23 @@ namespace StarterAssets
 
 		[Header("GUN")]
 		[Tooltip("무기의 이름")]
-        public string weaponName;		//총이름을 가져와야한다. 그리고 클리어시, 무슨총인지도 알려야한다.
+        public string weaponName;       //1
+		
+		public static string GunName;		//static
+
         [Tooltip("탄창당 탄 개수")]
         public int bulletsPerMag;
-        [Tooltip("잔여 총알")]
-        public int bulletsTotal;
+
+        [Tooltip("총 총알")]
+        public int bulletsTotal;				//2
+
+		public static int AmmoTotal;		//static
+
         [Tooltip("장전된 총알 수")]
-        public int currentBullets;
+        public int currentBullets;          //3
+		
+		public static int Ammo;				//static
+
         [Tooltip("사거리")]
         public float range;
         [Tooltip("발사 간격")]
@@ -435,40 +494,48 @@ namespace StarterAssets
 			}
 			else if (currentBullets <= 0)		//총알이 없을 때
 			{
-				StartCoroutine(ReloadAmmo());
+				Debug.Log("out of ammo");
+				if(bulletsTotal <= 0 && currentBullets <= 0)		//총알 고갈
+				{
+					return;
+				}
+				else
+				{
+					StartCoroutine(ReloadAmmo());
+				}
 			}
 			else if (fireTimer >= fireRate && currentBullets >= 0)  //발사
 			{
-				//발사
-				Debug.Log("Pistol Fired!");
-				RaycastHit hitinfo;
-				if (Physics.Raycast(shootPoint.position, shootPoint.transform.forward, out hitinfo, range))     //맞음 확인
-				{
-					Debug.Log("Hit!");
-				}
-				currentBullets--;
-				fireTimer = 0.0f;
-				//곧 삭제됨
 				GunType();
 				return;
 			}
         }
 
+        private void Raycasting()
+        {
+            Debug.Log("Fire!");
+            RaycastHit hitinfo;
+            if (Physics.Raycast(shootPoint.position, shootPoint.transform.forward, out hitinfo, range))     //맞음 확인
+            {
+                Debug.Log("Hit!");
+            }
+            currentBullets--;
+            fireTimer = 0.0f;
+        }
 
-		//-------------------------------------발사 시 총 타입
-		void GunType()
+
+        //-------------------------------------발사 시 총 타입
+        void GunType()
 		{
 			//반동
 			switch(weaponName)
             {
 				case "Pistol":
-					PistolShoot.Play();
 					StartCoroutine(PistolRecoil());
                     break;
 
 				case "Rifle":
-
-					StartCoroutine(RifleRecoil());
+                    StartCoroutine(RifleRecoil());
 					break;
 
 				case "Knife":
@@ -481,50 +548,103 @@ namespace StarterAssets
 			}
 		}
 		//1시간정도 뜯어보니까 저게 수직이더라고요.
-
-
         IEnumerator PistolRecoil()
 		{
+			//shoot
+			Raycasting();
+            PistolShoot.Play();
 
+
+            //recoil
             for (float i =0;i<8;i++)		//반동(제곱으로 순차적으로 올라가는 반동을 구현)
 			{
 				_cinemachineTargetPitch -= 0.5f*(Mathf.Abs(-i + 5));
                 CinemachineCameraTarget.transform.localRotation = Quaternion.Euler((_cinemachineTargetPitch), 0.0f, 0.0f);      //카메라 수직
-				yield return new WaitForSecondsRealtime(.02f);
+				yield return new WaitForSecondsRealtime(.01f);
             }
-		}
+			yield return new WaitForSecondsRealtime(.1f);
+
+            //end recoil
+
+            for (float i = 0; i < 40; i++)       //반동(제곱으로 순차적으로 올라가는 반동을 구현)
+            {
+                _cinemachineTargetPitch += 0.2f;
+                CinemachineCameraTarget.transform.localRotation = Quaternion.Euler((_cinemachineTargetPitch), 0.0f, 0.0f);      //카메라 수직
+                yield return new WaitForSecondsRealtime(.01f);
+            }
+        }
         IEnumerator RifleRecoil()
         {
-            for (float i = 0; i < 8; i++)       //반동(제곱으로 순차적으로 올라가는 반동을 구현)
-            {
-                _cinemachineTargetPitch -= 0.05f * (Mathf.Abs(-i + 5));
-                CinemachineCameraTarget.transform.localRotation = Quaternion.Euler((_cinemachineTargetPitch), 0.0f, 0.0f);      //카메라 수직
-                yield return new WaitForSecondsRealtime(.02f);
+			if(currentBullets >= 1)
+			{
+				while (_input.MainFire && currentBullets >= 1)     //쏘는중
+				{
+					//shoot
+					Raycasting();
+					RifleShoot.Play();
+
+
+					for (float i = 0; i < 8; i++)       //반동(제곱으로 순차적으로 올라가는 반동을 구현)
+					{
+						//recoil
+						_cinemachineTargetPitch -= 0.08f * (Mathf.Abs(-i + 5));
+						CinemachineCameraTarget.transform.localRotation = Quaternion.Euler((_cinemachineTargetPitch), 0.0f, 0.0f);      //카메라 수직
+						yield return new WaitForSecondsRealtime(.005f);
+					}
+				}
+				
+				for (float i = 0; i < 40; i++)       //반동(제곱으로 순차적으로 올라가는 반동을 구현)
+				{
+					_cinemachineTargetPitch += 0.04f;
+					CinemachineCameraTarget.transform.localRotation = Quaternion.Euler((_cinemachineTargetPitch), 0.0f, 0.0f);      //카메라 수직
+					yield return new WaitForSecondsRealtime(.005f);
+				}
+                if (currentBullets >= 1) { yield break; }
             }
             yield break;
         }
 
 		//------------------------------------------재장전---------------------------------------------
 		bool Isreload;
-
-
 		IEnumerator ReloadAmmo()
-        {
-			yield return new WaitForSecondsRealtime(2f);
-			ReloadBar.bar = 1;
-			while(ReloadBar.bar > 0)
-            {
-				ReloadBar.bar -= 0.1f;
-				yield return new WaitForSecondsRealtime(.1f);
-            }
+		{
+			if (!Isreload)
+			{
+				Isreload = true;
+				ReloadBar.bar = 1;
+				while (ReloadBar.bar > 0)       //재장전 바
+				{
+					ReloadBar.bar -= 0.05f;
+					yield return new WaitForSecondsRealtime(.1f);
+				}
 
-			//----------------재장전--------------------
-			Debug.Log("RELOAD");
-			Isreload = false;
+				//----------------재장전--------------------	
+				Debug.Log("RELOAD");
+
+				if (bulletsTotal < bulletsPerMag)       //총 총알 < 기본 장탄수
+				{
+					if(bulletsTotal + currentBullets < 16)
+					{
+                        currentBullets += bulletsTotal;
+                        bulletsTotal = 0;
+                    }
+					else
+					{
+                        bulletsTotal = (bulletsPerMag - bulletsTotal);
+                        currentBullets = bulletsPerMag;
+                    }
+
+
+				}
+				else
+				{
+					bulletsTotal -= bulletsPerMag - currentBullets;
+					currentBullets = bulletsPerMag;
+				}
+				Isreload = false;       //발사 잠금 해제
+			}
 			yield return null;
-        }
-
-
+		}
 
         //-----------------------------------------상호작용---------------------------------------------
 

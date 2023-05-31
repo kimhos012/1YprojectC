@@ -22,6 +22,12 @@ namespace StarterAssets
         public bool Interaction;
 		public bool SubInter;
 
+		public bool MainSwap;
+		public bool SubSwap;
+		public bool KnifeSwap;
+		public bool GamjaSwap;
+
+
 
         [Header("Movement Settings")]
 		public bool analogMovement;
@@ -89,11 +95,28 @@ namespace StarterAssets
 		{
 			SubInterInput(value.isPressed);
 		}
+		//keyboard
+		public void mainSwap(InputValue value)
+		{
+			MainSwapInput(value.isPressed);
+		}
+        public void subSwap(InputValue value)
+        {
+            SubSwapInput(value.isPressed);
+        }
+        public void knifeSwap(InputValue value)
+        {
+            KnifeSwapInput(value.isPressed);
+        }
 
+        public void gamjaSwap(InputValue value)
+        {
+            GamjaSwapInput(value.isPressed);
+        }
 #endif
 
 
-		public void MoveInput(Vector2 newMoveDirection)
+        public void MoveInput(Vector2 newMoveDirection)
 		{
 			move = newMoveDirection;
 		} 
@@ -147,10 +170,26 @@ namespace StarterAssets
 		{
 			SubInter = newSubInterState;
 		}
-		
+
+        public void MainSwapInput(bool newMainSwapState)
+        {
+            MainSwap = newMainSwapState;
+        }
+        public void SubSwapInput(bool newSubSwapState)
+        {
+            SubSwap = newSubSwapState;
+        }
+        public void KnifeSwapInput(bool newKnifeSwapState)
+        {
+            KnifeSwap = newKnifeSwapState;
+        }
+        public void GamjaSwapInput(bool newGamjaSwapState)
+        {
+            GamjaSwap = newGamjaSwapState;
+        }
 
 
-		private void OnApplicationFocus(bool hasFocus)
+        private void OnApplicationFocus(bool hasFocus)
 		{
 			SetCursorState(cursorLocked);
 		}
