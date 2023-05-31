@@ -28,11 +28,12 @@ namespace StarterAssets
 		public float CrouchSpeed = 3.0f;
         [Tooltip("Zooming speed of the chrarterr in m/s")]
         public float SubFireSpeed = 2.0f;
+		//CrouchScale
+		private float scaleY;
 
 
 
-
-        [Tooltip("GAMDO")]
+		[Tooltip("GAMDO")]
 		public float RotationSpeed = 1.0f;
 		[Tooltip("Acceleration and deceleration")]
 		public float SpeedChangeRate = 10.0f;
@@ -75,12 +76,6 @@ namespace StarterAssets
 		private float _rotationVelocity;
 		private float _verticalVelocity;
 		private float _terminalVelocity = 53.0f;
-
-        //CrouchScale
-        private float scaleY;
-
-
-
 
         // timeout deltatime
         private float _jumpTimeoutDelta;
@@ -131,8 +126,7 @@ namespace StarterAssets
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
 
-            //
-			//
+			//custom----
 
             scaleY = GameObject.Find("PlayerCapsule").GetComponent<Transform>().localScale.y;
 
@@ -150,15 +144,28 @@ namespace StarterAssets
 			GroundedCheck();
 			Move();
 
-			//추가 sctipt
+			//custom--
 
 			UseCrouch();        //앉기 기능
 
-			
+			if (_input.Reload)
+			{
+				if(!Isreload)
+				{
+					Isreload = true;
+					StartCoroutine(ReloadAmmo());
+					Debug.Log("pressed R");
+				}
+				else
+                {
+					return;
+                }
+			}
+
+
 			if (_input.MainFire)		//Mouse1
             {
-                if (currentBullets > 0)		
-                    Fire();
+                Fire();		//발사장치
             }
 			else if(fireTimer < fireRate)
 			{
@@ -169,7 +176,6 @@ namespace StarterAssets
             {
 
             }
-
 			
 		}
 
@@ -381,7 +387,7 @@ namespace StarterAssets
 
 		[Header("GUN")]
 		[Tooltip("무기의 이름")]
-        public static string weaponName;		//총이름을 가져와야한다. 그리고 클리어시, 무슨총인지도 알려야한다.
+        public string weaponName;		//총이름을 가져와야한다. 그리고 클리어시, 무슨총인지도 알려야한다.
         [Tooltip("탄창당 탄 개수")]
         public int bulletsPerMag;
         [Tooltip("잔여 총알")]
@@ -401,62 +407,137 @@ namespace StarterAssets
 		[Tooltip("RayCast의 시작점과 방향")]
         public Transform shootPoint;
 
+		//소리 설정
+
+		[Header("Weapon use Sound")]
+		[Tooltip("권총 쏘는소리")]
+		public AudioSource PistolShoot;
+        [Tooltip("소총 쏘는소리")]
+        public AudioSource RifleShoot;
+        [Tooltip("칼 쓰는소리")]
+        public AudioSource KnifeShoot;
+
+        [Header("Weapon Reload")]
+        [Tooltip("권총 재장전 소리")]
+        public AudioSource PistolReload;
+        [Tooltip("소총 재장전 소리")]
+        public AudioSource RifleReload;
+
+
+
+
+        //------------------------------------------총알 발사 및 장전-------------------------------------
         public void Fire()			//투사체는 최적화가 어려워서 Raycast로 진행
         {
-            if (fireTimer < fireRate && currentBullets >= 0)		//발사속도보다 빠르게 누르거나, 총알을 전부 사용시, return으로 돌려보냄
-            {
-                return;
-            }
-			else if(currentBullets <= 0)
-            {
-
-            }
-			else if(fireTimer >= fireRate && currentBullets >= 0)	//발사
-            {
-				GunRecoil();
-				return;
-            }
-			
-				
-        }
-		void GunRecoil()
-		{
-			//발사
-			Debug.Log("Shot Fired!");      
-			RaycastHit hitinfo;
-			if (Physics.Raycast(shootPoint.position, shootPoint.transform.forward, out hitinfo, range))     //맞음 확인
+			if (fireTimer < fireRate && currentBullets >= 0)        //발사속도보다 빠르게 누르거나, 총알을 전부 사용시, return으로 돌려보냄
 			{
-				Debug.Log("Hit!");
+				return;
 			}
-			currentBullets--;
-			fireTimer = 0.0f;
+			else if (currentBullets <= 0)		//총알이 없을 때
+			{
+				StartCoroutine(ReloadAmmo());
+			}
+			else if (fireTimer >= fireRate && currentBullets >= 0)  //발사
+			{
+				//발사
+				Debug.Log("Pistol Fired!");
+				RaycastHit hitinfo;
+				if (Physics.Raycast(shootPoint.position, shootPoint.transform.forward, out hitinfo, range))     //맞음 확인
+				{
+					Debug.Log("Hit!");
+				}
+				currentBullets--;
+				fireTimer = 0.0f;
+				//곧 삭제됨
+				GunType();
+				return;
+			}
+        }
+
+
+		//-------------------------------------발사 시 총 타입
+		void GunType()
+		{
 			//반동
 			switch(weaponName)
             {
 				case "Pistol":
-
-					break;
+					PistolShoot.Play();
+					StartCoroutine(PistolRecoil());
+                    break;
 
 				case "Rifle":
 
+					StartCoroutine(RifleRecoil());
 					break;
 
 				case "Knife":
 
+
+					break;
+
+				case null :
 					break;
 			}
 		}
+		//1시간정도 뜯어보니까 저게 수직이더라고요.
 
-		public void Interaction()
-        {
-			if (_input.Interaction)
+
+        IEnumerator PistolRecoil()
+		{
+
+            for (float i =0;i<8;i++)		//반동(제곱으로 순차적으로 올라가는 반동을 구현)
 			{
-
-			}
-			else if (_input.SubInter)
-			{
-
-			}
+				_cinemachineTargetPitch -= 0.5f*(Mathf.Abs(-i + 5));
+                CinemachineCameraTarget.transform.localRotation = Quaternion.Euler((_cinemachineTargetPitch), 0.0f, 0.0f);      //카메라 수직
+				yield return new WaitForSecondsRealtime(.02f);
+            }
 		}
+        IEnumerator RifleRecoil()
+        {
+            for (float i = 0; i < 8; i++)       //반동(제곱으로 순차적으로 올라가는 반동을 구현)
+            {
+                _cinemachineTargetPitch -= 0.05f * (Mathf.Abs(-i + 5));
+                CinemachineCameraTarget.transform.localRotation = Quaternion.Euler((_cinemachineTargetPitch), 0.0f, 0.0f);      //카메라 수직
+                yield return new WaitForSecondsRealtime(.02f);
+            }
+            yield break;
+        }
+
+		//------------------------------------------재장전---------------------------------------------
+		bool Isreload;
+
+
+		IEnumerator ReloadAmmo()
+        {
+			yield return new WaitForSecondsRealtime(2f);
+			ReloadBar.bar = 1;
+			while(ReloadBar.bar > 0)
+            {
+				ReloadBar.bar -= 0.1f;
+				yield return new WaitForSecondsRealtime(.1f);
+            }
+
+			//----------------재장전--------------------
+			Debug.Log("RELOAD");
+			Isreload = false;
+			yield return null;
+        }
+
+
+
+        //-----------------------------------------상호작용---------------------------------------------
+
+        public void Interaction()
+        {
+            if (_input.Interaction)
+            {
+
+            }
+            else if (_input.SubInter)
+            {
+
+            }
+        }
     }
 }

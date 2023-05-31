@@ -65,7 +65,7 @@
                     "name": "Reload",
                     "type": "PassThrough",
                     "id": "19782b35-6cdc-4e32-a314-f3b063daf0a3",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },
@@ -73,7 +73,7 @@
                     "name": "Interaction",
                     "type": "PassThrough",
                     "id": "661a217c-4804-45e6-80b3-d4e784619c3c",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },
@@ -81,7 +81,7 @@
                     "name": "SubFire",
                     "type": "PassThrough",
                     "id": "e8adf61f-b955-44d8-bed0-1ea480c63233",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },
@@ -89,7 +89,7 @@
                     "name": "SubInteraction",
                     "type": "PassThrough",
                     "id": "c71a5464-6bff-44d6-8222-4aa4af4b367f",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 }
